@@ -61,17 +61,30 @@
 (defn panorama_stitching [lst])
 (defn HDR_conversion [lst])
 (defn choosing_best [lst])
+; для choosing_best() в скобках указаны фильтры noise_reduction(1) noise_reduction(2) noise_reduction(3).
+; иначе => ошибка ввода.
 
 (defn cutting_areas [lst])
+; для cutting_areas() в скобках указано целое число - колво областей для нарезки.
+; иначе => ошибка ввода.
 
 
 (defn conveyor [filtr_lst] ; голова конвеера. Разбивает строку запроса на отдельные фильтры
-    ; обработка строки на наличие фильтров, скобок и тд, 
-    ; проверка на 1 или несколько включений фильтров н в 1
-    ; если 2 фильтра из н в 1 (хоть разных хоть одинаковых) => ошибка
     ; проверки из документа dontforget.md
-    
+    ; обработка строки на наличие фильтров, скобок и тд
     ; тк дальше будет работа с 1 фильтром, а не со всей строкой
+
+    ; Обработка строки на корректность ввода:
+    ; колво вхождений panorama_stitching, HDR_conversion, cutting_areas() <=1.
+    ; если есть panorama_stitching, то нет HDR_conversion. И наоборот. (то есть есть ктото один)
+    ; если есть panorama_stitching или HDR_conversion - первый фильтр в строке.
+    ; если есть panorama_stitching или HDR_conversion: кол-во ID фотографий > 1. если их нет, то колво ID фотографий = 1!
+    ; если есть cutting_areas() - он последний фильтр в строке.
+    ; нет фильтров(слов) не из нашего списка фильтров (тогда убрать строку else в apply_func)
+    ; если любое условие не выполнияется => ошибка ввода.
+
+    ; по хорошему функция walk должна идти после этой или внутри нее, но не раньше
+
     
     (def n_to_one (.indexOf (apply str filtr_lst) "panorama_stitching"))
     (def n_to_one_2 (.indexOf (apply str filtr_lst) "HDR_conversion"))
