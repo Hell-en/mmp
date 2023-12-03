@@ -119,28 +119,26 @@
     (println (count filtr_lst) (count panorama_amount) (count HDR_amount) (count cutting_areas_amount) (count rest_amount) )
     (def all_filtrs (+ (count panorama_amount) (count HDR_amount) (count cutting_areas_amount) (count rest_amount)))
     (println all_filtrs)
+
     
     ; нет фильтров(слов) не из нашего списка фильтров (тогда убрать строку else в apply_func)
     (if (not= all_filtrs (count filtr_lst))
         (println "There are wrong filter's names")
-        (println "next check"))
+        (println "All filters exist"))
 
-    ; если есть panorama_stitching или HDR_conversion: кол-во ID фотографий > 1. если их нет, то колво ID фотографий = 1!
-    (if (and (or (not (empty? panorama_amount)) (not (empty? HDR_amount))) (> photos_ID_amount 1))
-        (println "next check")
-        (println "Wrong amount of photos_ID"))
-
-    ; если есть panorama_stitching или HDR_conversion - первый фильтр в строке.
-    (if (or (and (not (empty? panorama_amount)) (= (first filtr_lst) "panorama_stitching")) 
-            (and (not (empty? HDR_amount)) (= (first filtr_lst) "HDR_conversion")))
-        (println "next check")
-        (println "First filter is incorrect"))
+    
 
     ; колво вхождений panorama_stitching, HDR_conversion <=1.
     ; если есть panorama_stitching, то нет HDR_conversion. И наоборот. (то есть есть кто-то один)
-    (if (> (+ (count panorama_amount) (count HDR_amount)) 1)
-        (println "Too many filters from n to 1")
-        (println "next check"))
+    ; если есть panorama_stitching или HDR_conversion: кол-во ID фотографий > 1. если их нет, то колво ID фотографий = 1!
+    ; если есть panorama_stitching или HDR_conversion - первый фильтр в строке.
+    (cond
+        (and (empty? panorama_amount) (empty? HDR_amount)) (println "There is no panorama_stitching or HDR_conversion")
+        (> (+ (count panorama_amount) (count HDR_amount)) 1) (println "Too many filters from n to 1")
+        (< photos_ID_amount 2) (println "Wrong amount of photos_ID")
+        (or (= (first filtr_lst) "panorama_stitching") (= (first filtr_lst) "HDR_conversion")) (println "Filter from n to 1 passed all tests")
+        :else (println "First filter is incorrect"))
+
 
     ; если есть cutting_areas() - он последний фильтр в строке.
     ; колво вхождений cutting_areas() <=1.
