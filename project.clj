@@ -51,11 +51,34 @@
     (println "number is " n))
 ; строка фильтров
 (defn third_id [n]
-    (def lst (str/split n #" "))
-    (walk lst))
+    (println "Finding ( ) [ ]")
+    (println n)
+    (def round_open ( - (count n) (count (clojure.string/replace n "(" ""))))
+    (println "round_open " round_open)
+    (def round_close ( - (count n) (count (clojure.string/replace n ")" ""))))
+    (println "round_close " round_close)
+
+    (def square_open ( - (count n) (count (clojure.string/replace n "[" ""))))
+    (println "square_open " square_open)
+    (def square_close ( - (count n) (count (clojure.string/replace n "]" ""))))
+    (println "square_close " square_close)
+
+    (if (and (= round_open round_close) (= square_open square_close) (<= round_close 1 ) (<= square_close 1))
+        (conveyor (str/split n #" "))
+        (println "Wrong filter request"))
+    
+    
+    )
+    ; (def lst (str/split n #" "))
+    ; (walk lst))
 
 (defn walk [filtr_lst]
     (println "Finding ()")
+    (println "filtr_lst is " filtr_lst)
+    (println "type is " (type filtr_lst))
+
+
+    
     (def ind_open (.indexOf (apply str filtr_lst) "("))
     (def ind_close (.indexOf (apply str filtr_lst) ")"))
     (println ind_open, ind_close)
