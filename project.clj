@@ -66,30 +66,8 @@
     (if (and (= round_open round_close) (= square_open square_close) (<= round_close 1 ) (<= square_close 1))
         (conveyor (str/split n #" "))
         (println "Wrong filter request"))
-    
-    
     )
-    ; (def lst (str/split n #" "))
-    ; (walk lst))
 
-(defn walk [filtr_lst]
-    (println "Finding ()")
-    (println "filtr_lst is " filtr_lst)
-    (println "type is " (type filtr_lst))
-
-
-    
-    (def ind_open (.indexOf (apply str filtr_lst) "("))
-    (def ind_close (.indexOf (apply str filtr_lst) ")"))
-    (println ind_open, ind_close)
-    (if (and (= -1 ind_open) (= -1 ind_close)) (conveyor filtr_lst))
-    (cond 
-        (and (= -1 ind_open) (< -1 ind_close)) (println "Error (")
-        (and (= -1 ind_close) (< -1 ind_open)) (println "Error )")
-        (> ind_open ind_close) (println "Error )(")
-    )
-    :else ; ()! ; когда 2 скобки
-)
 
 (defn noise_reduction_1 [lst]) ; default
 (defn noise_reduction_2 [lst])
