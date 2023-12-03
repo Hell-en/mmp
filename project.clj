@@ -37,8 +37,8 @@
         (first_id x)
         (println "Wrong request ID"))
     (def y (read))
-    ; проверка на Int: если без цифр пусто, значит были только цифры
-    (if (empty? (clojure.string/replace y #"[0-9]" ""))
+    ; проверка на Int: если без цифр и пробелов пусто, значит были только цифры
+    (if (empty? ( clojure.string/replace (clojure.string/replace y #"[0-9]" "") #" " ""))
         (second_id y)
         (println "Wrong photos ID"))
     (def z (read))
