@@ -5,9 +5,9 @@
 ; hdr преобразование   -- HDR_conversion 
 ; Выбор лучшего        -- choosing_best()
 ; 1 в 1
-; устранение шумов(1)  -- noise_reduction(1)
-; устранение шумов(2)  -- noise_reduction(2)
-; устранение шумов(3)  -- noise_reduction(3)
+; устранение шумов(1)  -- noise_reduction_1
+; устранение шумов(2)  -- noise_reduction_2
+; устранение шумов(3)  -- noise_reduction_3
 ; blur                 -- blur  
 ; 1 в n
 ; нарезка на области   -- cutting_areas()
@@ -110,8 +110,28 @@
     ; нет фильтров(слов) не из нашего списка фильтров (тогда убрать строку else в apply_func)
     ; если любое условие не выполнияется => ошибка ввода.
 
-    ; по хорошему функция walk должна идти после этой или внутри нее, но не раньше
 
+    (println "filtr_lst is " filtr_lst)
+    (println "type is " (type filtr_lst))
+    ; фильтры, которых должно быть не больше одного
+    (def panorama_amount (filterv (fn [x] (= x "panorama_stitching")) filtr_lst))
+    (def HDR_amount (filterv (fn [x] (= x "HDR_conversion")) filtr_lst))
+    (def cutting_areas_amount (filterv (fn [x] (= x "cutting_areas")) filtr_lst))
+    ; Все остальные фильтры : choosing_best, noise_reduction_1, noise_reduction_2, noise_reduction_3, blur
+    (def rest_amount (filterv (fn [x] (or (= x "choosing_best") (= x "noise_reduction_1") (= x "noise_reduction_2") (= x "noise_reduction_3") (= x "blur"))) filtr_lst))
+    (println panorama_amount HDR_amount cutting_areas_amount rest_amount)
+    (println (count filtr_lst) (count panorama_amount) (count HDR_amount) (count cutting_areas_amount) (count rest_amount) )
+    (def all_filtrs (+ (count panorama_amount) (count HDR_amount) (count cutting_areas_amount) (count rest_amount)))
+    (println all_filtrs)
+    
+    (if (not= all_filtrs (count filtr_lst))
+        (println "There are wrong filter's names")
+        (println "next check"))
+
+    (if (> (+ (count panorama_amount) (count HDR_amount)) 1)
+        (println "Too many filters from n to 1")
+        (println "next check"))
+    
     
     (def n_to_one (.indexOf (apply str filtr_lst) "panorama_stitching"))
     (def n_to_one_2 (.indexOf (apply str filtr_lst) "HDR_conversion"))
