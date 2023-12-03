@@ -33,12 +33,12 @@
 (defn read_input []
     (def x (read))
     ; проверка на Int: если без цифр пусто, значит были только цифры
-    (if (empty? (clojure.string/replace x #"[0-9]" ""))
+    (if (empty? (str/replace x #"[0-9]" ""))
         (first_id x)
         (println "Wrong request ID"))
     (def y (read))
     ; проверка на Int: если без цифр и пробелов пусто, значит были только цифры
-    (if (empty? ( clojure.string/replace (clojure.string/replace y #"[0-9]" "") #" " ""))
+    (if (empty? (str/replace (str/replace y #"[0-9]" "") #" " ""))
         (second_id y)
         (println "Wrong photos ID"))
     (def z (read))
@@ -55,23 +55,25 @@
     (println "number is " n))
 ; id фотографий
 (defn second_id [n]
-    ; Добавить обработку на несколько ID
     (println "Photos ID")
     (println "contains only numbers")
     (println "type is " (type n))
-    (println "number is " n))
+    (println "number is " n)
+    (def photos_ID_amount (+ 1 (count (re-seq #" " n))))
+    (println "amount of photos_ID " photos_ID_amount))
+   
 ; строка фильтров
 (defn third_id [n]
     (println "Finding ( ) [ ]")
     (println n)
-    (def round_open ( - (count n) (count (clojure.string/replace n "(" ""))))
+    (def round_open ( - (count n) (count (str/replace n "(" ""))))
     (println "round_open " round_open)
-    (def round_close ( - (count n) (count (clojure.string/replace n ")" ""))))
+    (def round_close ( - (count n) (count (str/replace n ")" ""))))
     (println "round_close " round_close)
 
-    (def square_open ( - (count n) (count (clojure.string/replace n "[" ""))))
+    (def square_open ( - (count n) (count (str/replace n "[" ""))))
     (println "square_open " square_open)
-    (def square_close ( - (count n) (count (clojure.string/replace n "]" ""))))
+    (def square_close ( - (count n) (count (str/replace n "]" ""))))
     (println "square_close " square_close)
 
     (if (and (= round_open round_close) (= square_open square_close) (<= round_close 1 ) (<= square_close 1))
@@ -102,12 +104,6 @@
     ; тк дальше будет работа с 1 фильтром, а не со всей строкой
 
     ; Обработка строки на корректность ввода:
-    ; колво вхождений panorama_stitching, HDR_conversion, cutting_areas() <=1.
-    ; если есть panorama_stitching, то нет HDR_conversion. И наоборот. (то есть есть ктото один)
-    ; если есть panorama_stitching или HDR_conversion - первый фильтр в строке.
-    ; если есть panorama_stitching или HDR_conversion: кол-во ID фотографий > 1. если их нет, то колво ID фотографий = 1!
-    ; если есть cutting_areas() - он последний фильтр в строке.
-    ; нет фильтров(слов) не из нашего списка фильтров (тогда убрать строку else в apply_func)
     ; если любое условие не выполнияется => ошибка ввода.
 
 
@@ -124,20 +120,36 @@
     (def all_filtrs (+ (count panorama_amount) (count HDR_amount) (count cutting_areas_amount) (count rest_amount)))
     (println all_filtrs)
     
+    ; нет фильтров(слов) не из нашего списка фильтров (тогда убрать строку else в apply_func)
     (if (not= all_filtrs (count filtr_lst))
         (println "There are wrong filter's names")
         (println "next check"))
 
+    ; если есть panorama_stitching или HDR_conversion: кол-во ID фотографий > 1. если их нет, то колво ID фотографий = 1!
+    (if (and (or (not (empty? panorama_amount)) (not (empty? HDR_amount))) (> photos_ID_amount 1))
+        (println "next check")
+        (println "Wrong amount of photos_ID"))
+
+    ; если есть panorama_stitching или HDR_conversion - первый фильтр в строке.
+    (if (or (and (not (empty? panorama_amount)) (= (first filtr_lst) "panorama_stitching")) 
+            (and (not (empty? HDR_amount)) (= (first filtr_lst) "HDR_conversion")))
+        (println "next check")
+        (println "First filter is incorrect"))
+
+    ; колво вхождений panorama_stitching, HDR_conversion <=1.
+    ; если есть panorama_stitching, то нет HDR_conversion. И наоборот. (то есть есть кто-то один)
     (if (> (+ (count panorama_amount) (count HDR_amount)) 1)
         (println "Too many filters from n to 1")
         (println "next check"))
-    
-    
-    (def n_to_one (.indexOf (apply str filtr_lst) "panorama_stitching"))
-    (def n_to_one_2 (.indexOf (apply str filtr_lst) "HDR_conversion"))
-    (if (and (not (= n_to_one -1)) (not (= n_to_one_2 -1))) 
-        (println "Error panorama_stitching and HDR_conversion at the same time")
-    )
+
+    ; если есть cutting_areas() - он последний фильтр в строке.
+    ; колво вхождений cutting_areas() <=1.
+    (cond
+        (empty? cutting_areas_amount) (println "There is no cutting_area")
+        (> (count cutting_areas_amount) 1) (println "Too many cutting_areas filters")
+        (= (nth filtr_lst (- (count filtr_lst) 1)) "cutting_areas") (println "Cutting_areas passed all tests")
+        :else (println "Last filter is incorrect"))
+
     
     (println "list of filtrs = ", filtr_lst)
     (def rest_request (atom (vec filtr_lst)))
