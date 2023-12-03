@@ -20,6 +20,16 @@
 (defn conveyor [filtr_lst])
 (defn apply_func [filtr])
 
+
+
+; Если в read_input сразу есть "Wrong request ID" или "Wrong photos ID" => в конвеер даже не заходим. На этом конец.
+; При обработке скобок вышло "Wrong filter request" => то же самое. Дальше в конвеер не заходим.
+; При обработке строки фильтров в конвеере сначала проверить коррекность всех записей.
+; Если что-то не так -> конвеер не запускаем. 
+; И только если все условия соблюдены идем в конвеер!!!
+
+
+
 (defn read_input []
     (def x (read))
     ; проверка на Int: если без цифр пусто, значит были только цифры
@@ -45,6 +55,7 @@
     (println "number is " n))
 ; id фотографий
 (defn second_id [n]
+    ; Добавить обработку на несколько ID
     (println "Photos ID")
     (println "contains only numbers")
     (println "type is " (type n))
