@@ -20,27 +20,42 @@
 (defn conveyor [filtr_lst])
 (defn apply_func [filtr])
 
-(defn read_input []    (def x (read))
-    (first_id x)    (def x (read))
-    (second_id x)    (def x (read))
-    (third_id x))
+(defn read_input []
+    (def x (read))
+    ; проверка на Int: если без цифр пусто, значит были только цифры
+    (if (empty? (clojure.string/replace x #"[0-9]" ""))
+        (first_id x)
+        (println "Wrong request ID"))
+    (def y (read))
+    ; проверка на Int: если без цифр пусто, значит были только цифры
+    (if (empty? (clojure.string/replace y #"[0-9]" ""))
+        (second_id y)
+        (println "Wrong photos ID"))
+    (def z (read))
+    (third_id z)    
+    )
     ;(def x (read false :eof)))) не можем проверить есть ли еще данные.
     
 ; id запроса
 (defn first_id [n]
-    (if (int? n)
-    (println n)
-    (println "Wrong request ID")))
+    ; (int n)
+    (println "Request ID")
+    (println "contains only numbers")
+    (println "type is " (type n))
+    (println "number is " n))
 ; id фотографий
 (defn second_id [n]
-   ; (map int? n)
-    (println n))
+    (println "Photos ID")
+    (println "contains only numbers")
+    (println "type is " (type n))
+    (println "number is " n))
 ; строка фильтров
 (defn third_id [n]
     (def lst (str/split n #" "))
     (walk lst))
 
 (defn walk [filtr_lst]
+    (println "Finding ()")
     (def ind_open (.indexOf (apply str filtr_lst) "("))
     (def ind_close (.indexOf (apply str filtr_lst) ")"))
     (println ind_open, ind_close)
