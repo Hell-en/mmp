@@ -1,4 +1,6 @@
 (require '[clojure.string :as str])
+; (require '[clojure.java.io :as io]) ;?
+
 ; Фильтры:
 ; n в 1
 ; сшивка панорам       -- panorama_stitching 
