@@ -25,10 +25,6 @@
   (third_id z)
   )
 
-; (def reqID (atom nil))
-
-; (def filNMS (atom nil))
-
 ; id запроса
 (defn first_id [n]
   ; (int n)
@@ -63,6 +59,7 @@
   (if (and (= round_open round_close) (= square_open square_close) (<= round_close 1 ) (<= square_close 1))
     (conveyor (str/split n #" "))
     (println "Wrong filter request"))
+  ; если передает в конце если резка то ".. rezka m" где м - число
   )
 
 
@@ -86,34 +83,33 @@
   (with-open [wrtr (io/writer f_name :append true)]
     (.write wrtr "processed blur"))
   )
-
-
 (defn panorama_stitching [photoid_lst]
   (with-open [wrtr (io/writer "p-s_new.txt")] ; write to a new file
     (.write wrtr "panorama_stitching" )
-    (.write wrtr (for [x photoid_lst] x))) ; will work; resulted like ()
+    (.write wrtr (for [x photoid_lst] x))) ; will work; resulted like '()
   )
 (defn HDR_conversion [photoid_lst]
   (use 'clojure.java.io)
   (with-open [wrtr (io/writer "HDR_new.txt")] ; write to a new file
     (.write wrtr "HDR_conversion" )
-    (.write wrtr (for [x photoid_lst] x))) ; will work (?); resulted like ()
+    (.write wrtr (for [x photoid_lst] x))) ; will work; resulted like '()
   )
-(defn choosing_best [photoid, fl1, fl2, fl3]
-  (fl1 photoid)
-  (fl2 photoid)
-  (fl3 photoid)
+(defn choosing_best [photoid]
+  (noise_reduction_1 photoid)
+  (noise_reduction_2 photoid)
+  (noise_reduction_3 photoid)
+  (cond )
   ;read 3 files, take last elems. compare them
   )
-; для choosing_best() в скобках указаны фильтры noise_reduction(1) noise_reduction(2) noise_reduction(3).
-; иначе => ошибка ввода.
 
-(defn cutting_areas [photoid, m]
-  ; (for [x (range 3)] )
-
+(defn cutting_areas [photoid]
+  (println "print the number of partition")
+  (def m (read))
+  (for [x (range m)]
+    ((with-open [wrtr (io/writer (str x "-cut.txt"))] ; write to a new file
+     (.write wrtr "cutting" )(.write wrtr x))
+     ))                                      ; write smth
   )
-; для cutting_areas() в скобках указано целое число - колво областей для нарезки.
-; иначе => ошибка ввода.
 
 
 (defn conveyor [filtr_lst] ; Разбивает строку запроса на отдельные фильтры
@@ -153,8 +149,7 @@
   (println "list of filtrs = ", filtr_lst)
   (def rest_request (atom (vec filtr_lst)))
   (while (not(empty? @rest_request))
-    ;(println (first @rest_request))
-    (apply_func (first @rest_request))
+    (apply_func (first @rest_request))               ;apply filters
     (swap! rest_request rest))
   )
 
@@ -167,9 +162,12 @@
     (= filtr "noise_reduction_2") (noise_reduction_2 [photoid])
     (= filtr "noise_reduction_3") (noise_reduction_3 [photoid])
     (= filtr "blur") (blur [photoid])
-    ; ниже разблочу потом. как будет парамектр m
-    ; (= filtr "cutting_areas") (cutting_areas [photoid, m])
+    (= filtr "cutting_areas") (cutting_areas [photoid])
     :else (println "Error filter name"))
   )
 
-(read_input)
+(println "print the number of requests")
+(def number (read))
+(while (pos? @number)        ;читаем несколько запросов ; какие-то проблемы
+  (read_input)
+  (swap! number dec))
