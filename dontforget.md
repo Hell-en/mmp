@@ -74,6 +74,30 @@ noise_reduction(1) noise_reduction(2) noise_reduction(3).
 если любое условие не выполнияется => ошибка ввода.
 
 
+
+
+
+
+
+
+Для каждго запроса создается файл с имененм №id_request.txt. Внутри файла пишется результат работы конвеера.
+Запрос: "23" "4" "blur noise_reduction_1 blur".
+Вывод в файл 23.txt: "processed blur" "processed noise_reduction_1 " "processed blur".
+Для каждого запорса - свой файл. Как формат отчета по проделанной работе.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Время работы каждого фильтра:
 panorama_stitching	---  (кол-во входных ID фотографий - 1)
 HDR_conversion		---  (кол-во входных ID фотографий - 1)
