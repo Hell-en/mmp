@@ -100,14 +100,30 @@
     (.write wrtr "HDR_conversion")
     (.write wrtr (for [x photoid_lst] x)))                  ; will work; resulted like '()
   )
+
+(def res1 (atom nil))
+(def res2 (atom nil))
+(def res3 (atom nil))
+
 (defn choosing_best [photoid]
   (->> photoid
        (noise_reduction_1)
        (noise_reduction_2)
        (noise_reduction_3)
        )
-  (cond)
-  ;read 3 files, take last elems. compare them
+  (let [res1 (noise_reduction_1 photoid)] res1)
+  (let [res2 (noise_reduction_2 photoid)] res2)
+  (let [res3 (noise_reduction_3 photoid)] res3)
+  (def f_name (slurp (str requestid ".txt")))
+  (with-open [wrtr (io/writer f_name :append true)]
+  (cond (and (> res1 res3) (> res1 res2))
+          (.write wrtr (str "processed noise_reduction_1 was best"))
+        (and (> res2 res3) (> res2 res1))
+          (.write wrtr (str "processed noise_reduction_2 was best"))
+        (and (> res3 res1) (> res3 res2))
+          (.write wrtr (str "processed noise_reduction_3 was best"))
+    )
+  )
   )
 
 (defn cutting_areas [photoid]
