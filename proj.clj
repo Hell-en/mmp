@@ -15,7 +15,7 @@
 
 (defn read_input []
   (def x (read))
-  (let [requestid y] requestid)
+  (let [requestid x] requestid)
   (if (empty? (str/replace x #"[0-9]" ""))
     (first_id x)
     (println "Wrong request ID"))
@@ -117,12 +117,8 @@
     ((with-open [wrtr (io/writer (str requestid "_" x ".txt"))] ; write to a new file
        (.write wrtr "cutting") (.write wrtr x))
      ))                                                     ; write smth
-  
-  (->>
-    (blur (str requestid "_1"))
-    (blur (str requestid "_2"))
-    (blur (str requestid "_3"))
-    )
+
+  (pmap blur (list (str requestid "_1") (str requestid "_2") (str requestid "_3")))
   )
 
 
@@ -181,4 +177,4 @@
     :else (println "Error filter name"))
   )
 
-  (read_input)
+(read_input)
