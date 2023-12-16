@@ -1,5 +1,6 @@
-(ns nocomm (:require [clojure.string :as str]
-                   [clojure.java.io :as io])
+(ns nocomm
+  (:require [clojure.string :as str]
+            [clojure.java.io :as io])
   )
 
 (defn first_id [n])
@@ -10,9 +11,11 @@
 (defn apply_func [filtr])
 
 (def photoid (atom nil))
+(def requestid (atom nil))
 
 (defn read_input []
   (def x (read))
+  (let [requestid y] requestid)
   (if (empty? (str/replace x #"[0-9]" ""))
     (first_id x)
     (println "Wrong request ID"))
@@ -48,71 +51,82 @@
 (defn third_id [n]
   (println "Finding ( ) [ ]")
   (println n)
-  (def round_open ( - (count n) (count (str/replace n "(" ""))))
+  (def round_open (- (count n) (count (str/replace n "(" ""))))
   (println "round_open " round_open)
-  (def round_close ( - (count n) (count (str/replace n ")" ""))))
+  (def round_close (- (count n) (count (str/replace n ")" ""))))
   (println "round_close " round_close)
-  (def square_open ( - (count n) (count (str/replace n "[" ""))))
+  (def square_open (- (count n) (count (str/replace n "[" ""))))
   (println "square_open " square_open)
-  (def square_close ( - (count n) (count (str/replace n "]" ""))))
+  (def square_close (- (count n) (count (str/replace n "]" ""))))
   (println "square_close " square_close)
-  (if (and (= round_open round_close) (= square_open square_close) (<= round_close 1 ) (<= square_close 1))
+  (if (and (= round_open round_close) (= square_open square_close) (<= round_close 1) (<= square_close 1))
     (conveyor (str/split n #" "))
     (println "Wrong filter request"))
   ; если передает в конце если резка то ".. rezka m" где м - число
   )
 
 
-(defn noise_reduction_1 [photoid] ; default
-  (def f_name (slurp (str photoid ".txt")))
+(defn noise_reduction_1 [photoid]                           ; default
+  (def f_name (slurp (str requestid ".txt")))
   (with-open [wrtr (io/writer f_name :append true)]
     (.write wrtr (str "processed noise_reduction_1 " photoid)))
+  photoid
   )
 (defn noise_reduction_2 [photoid]
-  (def f_name (slurp (str photoid ".txt")))
+  (def f_name (slurp (str requestid ".txt")))
   (with-open [wrtr (io/writer f_name :append true)]
     (.write wrtr (str "processed noise_reduction_2 " (inc photoid))))
+  (inc photoid)
   )
 (defn noise_reduction_3 [photoid]
-  (def f_name (slurp (str photoid ".txt")))
+  (def f_name (slurp (str requestid ".txt")))
   (with-open [wrtr (io/writer f_name :append true)]
     (.write wrtr (str "processed noise_reduction_3 " (dec photoid))))
+  (dec photoid)
   )
-(defn blur [photoid]
-  (def f_name (slurp (str photoid ".txt")))
+(defn blur [reqid]
+  (def f_name (slurp (str reqid ".txt")))
   (with-open [wrtr (io/writer f_name :append true)]
     (.write wrtr "processed blur"))
   )
 (defn panorama_stitching [photoid_lst]
-  (with-open [wrtr (io/writer "p-s_new.txt")] ; write to a new file
-    (.write wrtr "panorama_stitching" )
-    (.write wrtr (for [x photoid_lst] x))) ; will work; resulted like '()
+  (with-open [wrtr (io/writer (str requestid ".txt"))]               ; write to a new file
+    (.write wrtr "panorama_stitching")
+    (.write wrtr (for [x photoid_lst] x)))                  ; will work; resulted like '()
   )
 (defn HDR_conversion [photoid_lst]
   (use 'clojure.java.io)
-  (with-open [wrtr (io/writer "HDR_new.txt")] ; write to a new file
-    (.write wrtr "HDR_conversion" )
-    (.write wrtr (for [x photoid_lst] x))) ; will work; resulted like '()
+  (with-open [wrtr (io/writer (str requestid ".txt"))]               ; write to a new file
+    (.write wrtr "HDR_conversion")
+    (.write wrtr (for [x photoid_lst] x)))                  ; will work; resulted like '()
   )
 (defn choosing_best [photoid]
-  (noise_reduction_1 photoid)
-  (noise_reduction_2 photoid)
-  (noise_reduction_3 photoid)
-  (cond )
+  (->> photoid
+       (noise_reduction_1)
+       (noise_reduction_2)
+       (noise_reduction_3)
+       )
+  (cond)
   ;read 3 files, take last elems. compare them
   )
 
 (defn cutting_areas [photoid]
-  (println "print the number of partition")
-  (def m (read))
-  (for [x (range m)]
-    ((with-open [wrtr (io/writer (str x "-cut.txt"))] ; write to a new file
-     (.write wrtr "cutting" )(.write wrtr x))
-     ))                                      ; write smth
+  ; (println "print the number of partition")
+  ; (def m (read))
+  (for [x (range 3)]
+    ((with-open [wrtr (io/writer (str requestid "_" x ".txt"))] ; write to a new file
+       (.write wrtr "cutting") (.write wrtr x))
+     ))                                                     ; write smth
+  
+  (->>
+    (blur (str requestid "_1"))
+    (blur (str requestid "_2"))
+    (blur (str requestid "_3"))
+    )
   )
 
 
-(defn conveyor [filtr_lst] ; Разбивает строку запроса на отдельные фильтры
+(defn conveyor [filtr_lst]               ; Разбивает строку запроса на отдельные фильтры
 
   (println "filtr_lst is " filtr_lst)
   (println "type is " (type filtr_lst))
@@ -122,7 +136,7 @@
   ; Все остальные фильтры : choosing_best, noise_reduction_1, noise_reduction_2, noise_reduction_3, blur
   (def rest_amount (filterv (fn [x] (or (= x "choosing_best") (= x "noise_reduction_1") (= x "noise_reduction_2") (= x "noise_reduction_3") (= x "blur"))) filtr_lst))
   (println panorama_amount HDR_amount cutting_areas_amount rest_amount)
-  (println (count filtr_lst) (count panorama_amount) (count HDR_amount) (count cutting_areas_amount) (count rest_amount) )
+  (println (count filtr_lst) (count panorama_amount) (count HDR_amount) (count cutting_areas_amount) (count rest_amount))
   (def all_filtrs (+ (count panorama_amount) (count HDR_amount) (count cutting_areas_amount) (count rest_amount)))
   (println all_filtrs)
 
@@ -148,12 +162,12 @@
 
   (println "list of filtrs = ", filtr_lst)
   (def rest_request (atom (vec filtr_lst)))
-  (while (not(empty? @rest_request))
-    (apply_func (first @rest_request))               ;apply filters
+  (while (not (empty? @rest_request))
+    (apply_func (first @rest_request))                      ;apply filters
     (swap! rest_request rest))
   )
 
-(defn apply_func [filtr] ; без выбора лучшего. шумы по умолчанию
+(defn apply_func [filtr]                                    ; без выбора лучшего. шумы по умолчанию
   (println "filtr = ", filtr)
   (cond                                                     ;; нет выбора лучшего!!!
     (= filtr "panorama_stitching") (panorama_stitching [photoid]) ; должно быть по дефолту то что считали с консоли
@@ -161,13 +175,10 @@
     (= filtr "noise_reduction_1") (noise_reduction_1 [photoid])
     (= filtr "noise_reduction_2") (noise_reduction_2 [photoid])
     (= filtr "noise_reduction_3") (noise_reduction_3 [photoid])
+    (= filtr "choosing_best") (choosing_best [photoid])
     (= filtr "blur") (blur [photoid])
     (= filtr "cutting_areas") (cutting_areas [photoid])
     :else (println "Error filter name"))
   )
 
-(println "print the number of requests")
-(def number (read))
-(while (pos? @number)        ;читаем несколько запросов ; какие-то проблемы
   (read_input)
-  (swap! number dec))
