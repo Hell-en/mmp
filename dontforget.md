@@ -79,14 +79,21 @@ noise_reduction(1) noise_reduction(2) noise_reduction(3).
 
 
 
-
+1.
 Для каждго запроса создается файл с имененм №id_request.txt. Внутри файла пишется результат работы конвеера.
 Запрос: "23" "4" "blur noise_reduction_1 blur".
 Вывод в файл 23.txt: "processed blur" "processed noise_reduction_1 " "processed blur".
 Для каждого запорса - свой файл. Как формат отчета по проделанной работе.
 
 
-
+2.
+cutting_areas возвращает несколько файлов txt.
+После cutting_areas может идти только blur.
+cutting_areas возвращает несколько файлов, которые идут в blur. Соответсвенно надо прописать
+(--> (blur id_1)
+     (blur id_2)
+     (blur id_3))
+в файлы с новым id перенести информацию из старого файла.
 
 
 
