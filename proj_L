@@ -1,0 +1,170 @@
+(ns nocomm
+  (:require [clojure.string :as str]
+            [clojure.java.io :as io]
+            [clojure.test :refer :all])
+  )
+
+(defn first_id [n])
+(defn second_id [n])
+(defn conveyor [filtr_lst])
+(defn apply_func [filtr])
+(defn noise_reduction_1 [n])
+(defn noise_reduction_2 [n])
+(defn noise_reduction_3 [n])
+(defn blur [n])
+(defn panorama_stitching [n])
+(defn HDR_conversion [n])
+(defn choosing_best [n])
+(defn cutting_areas [n])
+
+
+(def photoid (atom nil))
+(def requestid (atom nil))
+(def res1 (atom nil))
+(def res2 (atom nil))
+(def res3 (atom nil))
+
+
+(defn read_input []
+  (def x (read))
+  (def requestid x)
+  ;(println "reqID = " requestid)
+  (if (empty? (str/replace x #"[0-9]" ""))
+    (first_id x)
+    (println "Wrong request ID"))
+  (def y (read))
+  (def photoid y)
+  (if (empty? (str/replace (str/replace y #"[0-9]" "") #" " ""))
+    (second_id y)
+    (println "Wrong photos ID"))
+  (def z (read))
+  (conveyor z)
+  )
+
+(defn first_id [n] ; id запроса
+  (println "Request ID contains only numbers")
+  (println "type is " (type n))
+  )
+(defn second_id [n] ; id фотографий
+  (println "Photos ID contains only numbers")
+  ;(println "type is " (type n))
+  (println "number is " n)
+  (def photos_ID_amount (+ 1 (count (re-seq #" " n))))
+  (println "amount of photos_ID " photos_ID_amount)
+  )
+
+
+(defn conveyor [filtr_lst]        ; Разбивает строку запроса на отдельные фильтры
+  (def panorama_amount (filterv (fn [x] (= x "panorama_stitching")) filtr_lst))
+  (def HDR_amount (filterv (fn [x] (= x "HDR_conversion")) filtr_lst))
+  (def cutting_areas_amount (filterv (fn [x] (= x "cutting_areas")) filtr_lst))
+  ; Все остальные фильтры : choosing_best, noise_reduction_1, noise_reduction_2, noise_reduction_3, blur
+  (def rest_amount (filterv (fn [x] (or (= x "choosing_best") (= x "noise_reduction_1") (= x "noise_reduction_2") (= x "noise_reduction_3") (= x "blur"))) filtr_lst))
+  ;(println panorama_amount HDR_amount cutting_areas_amount rest_amount)
+  ;(println (count filtr_lst) (count panorama_amount) (count HDR_amount) (count cutting_areas_amount) (count rest_amount))
+  (def all_filtrs (+ (count panorama_amount) (count HDR_amount) (count cutting_areas_amount) (count rest_amount)))
+  ;(println all_filtrs)
+  (if (not= all_filtrs (count filtr_lst))
+    (println "There are wrong filter's names")
+    (println "All filters exist"))
+  (cond
+    (and (empty? panorama_amount) (empty? HDR_amount)) (println "There is no panorama_stitching or HDR_conversion")
+    (> (+ (count panorama_amount) (count HDR_amount)) 1) (println "Too many filters from n to 1")
+    (< photos_ID_amount 2) (println "Wrong amount of photos_ID")
+    (or (= (first filtr_lst) "panorama_stitching") (= (first filtr_lst) "HDR_conversion")) (println "Filter from n to 1 passed all tests")
+    :else (println "First filter is incorrect")
+    )
+  (cond
+    (empty? cutting_areas_amount) (println "There is no cutting_area")
+    (> (count cutting_areas_amount) 1) (println "Too many cutting_areas filters")
+    (= (nth filtr_lst (- (count filtr_lst) 1)) "cutting_areas") (println "Cutting_areas passed all tests")
+    :else (println "Last filter is incorrect")
+    )
+  (println "list of filtrs = ", filtr_lst)
+  (println "photo_id = ", photoid)
+
+  (if (some #(= "panorama_stitching" %) filtr_lst) (panorama_stitching photoid))
+  (if (some #(= "HDR_conversion" %) filtr_lst) (HDR_conversion photoid))
+  (if (some #(= "noise_reduction_1" %) filtr_lst) (noise_reduction_1 photoid))
+  (if (some #(= "noise_reduction_2" %) filtr_lst) (noise_reduction_2 photoid))
+  (if (some #(= "noise_reduction_3" %) filtr_lst) (noise_reduction_3 photoid))
+  (if (some #(= "choosing_best" %) filtr_lst) (choosing_best photoid))
+  (if (some #(= "blur" %) filtr_lst) (blur photoid))
+  (if (some #(= "cutting_areas" %) filtr_lst) (cutting_areas photoid))
+  )
+
+
+(defn noise_reduction_1 [ph_id]                ; default
+  (def f_name (str requestid ".txt"))
+  (with-open [wrtr (io/writer f_name :append true)]
+    (.write wrtr (str "processed noise_reduction_1 " ph_id " ")))
+  ph_id
+  )
+(defn noise_reduction_2 [ph_id]
+  (def f_name (str requestid ".txt"))
+  (with-open [wrtr (io/writer f_name :append true)]
+    (.write wrtr (str "processed noise_reduction_2 " (inc ph_id) " ")))
+  (inc ph_id)
+  )
+(defn noise_reduction_3 [ph_id]
+  (def f_name (str requestid ".txt"))
+  (with-open [wrtr (io/writer f_name :append true)]
+    (.write wrtr (str "processed noise_reduction_3 " (dec ph_id) " ")))
+  (dec ph_id)
+  )
+(defn blur [ph_id]
+  (def f_name (str requestid ".txt"))
+  (with-open [wrtr (io/writer f_name :append true)]
+    (.write wrtr "processed blur "))
+  )
+(defn panorama_stitching [photoid_lst]
+  (with-open [wrtr (io/writer (str requestid ".txt") :append true)]
+    ; (.write wrtr "processed panorama_stitching ")
+    (.write wrtr (for [x photoid_lst] (str "processed panorama_stitching " x))))                  ; will work; resulted like '()
+  )
+(defn HDR_conversion [photoid_lst]
+  (with-open [wrtr (io/writer (str requestid ".txt") :append true)]
+    (.write wrtr "processed HDR_conversion ")
+    (.write wrtr (for [x photoid_lst] x)))        ; will work; resulted like '()
+  )
+(defn choosing_best [photoid]
+  (->> photoid
+       (noise_reduction_1)
+       (noise_reduction_2)
+       (noise_reduction_3)
+       )
+  (def res1 (noise_reduction_1 photoid))
+  (def res2 (noise_reduction_2 photoid))
+  (def res3 (noise_reduction_3 photoid))
+  (def f_name (str requestid ".txt"))
+  (with-open [wrtr (io/writer f_name :append true)]
+    (cond (and (> res1 res3) (> res1 res2))
+          (.write wrtr (str "processed noise_reduction_1 was best "))
+          (and (> res2 res3) (> res2 res1))
+          (.write wrtr (str "processed noise_reduction_2 was best "))
+          (and (> res3 res1) (> res3 res2))
+          (.write wrtr (str "processed noise_reduction_3 was best "))
+          )
+    )
+  )
+(defn cutting_areas [photoid]
+  (println "print the number of partition > 1")
+  (def m (read))
+  (for [x (range m)]
+    ((println "cutting f_name = " (str requestid "_" x ".txt"))
+     (with-open [wrtr (io/writer (str requestid "_" x ".txt") :append true)]
+       (.write wrtr "processed cutting ") (.write wrtr x))
+     ))
+  ; реализуем многопоточный узел:
+  (if (> m 2) (pmap blur (list (str requestid "_1") (str requestid "_2") (str requestid "_3"))))
+  
+  )
+
+
+(read_input)
+
+
+(deftest check_id_request_type
+  (is (= "java.lang.Long" (type requestid))))
+
+(run-tests 'nocomm)
