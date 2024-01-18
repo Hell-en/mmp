@@ -64,9 +64,6 @@
   ;(println (count filtr_lst) (count panorama_amount) (count HDR_amount) (count cutting_areas_amount) (count rest_amount))
   (def all_filtrs (+ (count panorama_amount) (count HDR_amount) (count cutting_areas_amount) (count rest_amount)))
   ;(println all_filtrs)
-  (if (not= all_filtrs (count filtr_lst))
-    (println "There are wrong filter's names")
-    (println "All filters exist"))
   (cond
     (and (empty? panorama_amount) (empty? HDR_amount)) (println "There is no panorama_stitching or HDR_conversion")
     (> (+ (count panorama_amount) (count HDR_amount)) 1) (println "Too many filters from n to 1")
@@ -81,16 +78,20 @@
     :else (println "Last filter is incorrect")
     )
   (println "list of filtrs = ", filtr_lst)
+  (println (type filtr_lst))
   (println "photo_id = ", photoid)
+  ;(println (type photoid))
+  ;(println (type (Integer/parseInt photoid)))
 
-  (if (some #(= "panorama_stitching" %) filtr_lst) (panorama_stitching photoid))
-  (if (some #(= "HDR_conversion" %) filtr_lst) (HDR_conversion photoid))
-  (if (some #(= "noise_reduction_1" %) filtr_lst) (noise_reduction_1 photoid))
-  (if (some #(= "noise_reduction_2" %) filtr_lst) (noise_reduction_2 photoid))
-  (if (some #(= "noise_reduction_3" %) filtr_lst) (noise_reduction_3 photoid))
-  (if (some #(= "choosing_best" %) filtr_lst) (choosing_best photoid))
-  (if (some #(= "blur" %) filtr_lst) (blur photoid))
-  (if (some #(= "cutting_areas" %) filtr_lst) (cutting_areas photoid))
+
+  (if (clojure.string/includes? filtr_lst "blur") (blur photoid))
+  (if (clojure.string/includes? filtr_lst "panorama_stitching") (panorama_stitching photoid))
+  (if (clojure.string/includes? filtr_lst "HDR_conversion") (HDR_conversion photoid))
+  (if (clojure.string/includes? filtr_lst "noise_reduction_1") (noise_reduction_1 photoid))
+  (if (clojure.string/includes? filtr_lst "noise_reduction_2") (noise_reduction_2 photoid))
+  (if (clojure.string/includes? filtr_lst "noise_reduction_3") (noise_reduction_3 photoid))
+  (if (clojure.string/includes? filtr_lst "choosing_best") (choosing_best photoid))
+  (if (clojure.string/includes? filtr_lst "cutting_areas") (cutting_areas photoid))
   )
 
 
@@ -103,14 +104,14 @@
 (defn noise_reduction_2 [ph_id]
   (def f_name (str requestid ".txt"))
   (with-open [wrtr (io/writer f_name :append true)]
-    (.write wrtr (str "processed noise_reduction_2 " (inc ph_id) " ")))
-  (inc ph_id)
+    (.write wrtr (str "processed noise_reduction_2 " (inc (Integer/parseInt ph_id)) " ")))
+  (inc (Integer/parseInt ph_id))
   )
 (defn noise_reduction_3 [ph_id]
   (def f_name (str requestid ".txt"))
   (with-open [wrtr (io/writer f_name :append true)]
-    (.write wrtr (str "processed noise_reduction_3 " (dec ph_id) " ")))
-  (dec ph_id)
+    (.write wrtr (str "processed noise_reduction_3 " (dec (Integer/parseInt ph_id)) " ")))
+  (dec (Integer/parseInt ph_id))
   )
 (defn blur [ph_id]
   (def f_name (str requestid ".txt"))
@@ -120,12 +121,14 @@
 (defn panorama_stitching [photoid_lst]
   (with-open [wrtr (io/writer (str requestid ".txt") :append true)]
     ; (.write wrtr "processed panorama_stitching ")
-    (.write wrtr (for [x photoid_lst] (str "processed panorama_stitching " x))))                  ; will work; resulted like '()
+    (for [x photoid_lst]
+      (.write wrtr (str "processed panorama_stitching " x)))
+    )
   )
 (defn HDR_conversion [photoid_lst]
   (with-open [wrtr (io/writer (str requestid ".txt") :append true)]
     (.write wrtr "processed HDR_conversion ")
-    (.write wrtr (for [x photoid_lst] x)))        ; will work; resulted like '()
+    (.write wrtr (for [x photoid_lst] x)))
   )
 (defn choosing_best [photoid]
   (->> photoid
@@ -134,6 +137,8 @@
        (noise_reduction_3)
        )
   (def res1 (noise_reduction_1 photoid))
+  (println res1)
+  (println (type res1))
   (def res2 (noise_reduction_2 photoid))
   (def res3 (noise_reduction_3 photoid))
   (def f_name (str requestid ".txt"))
@@ -157,7 +162,7 @@
      ))
   ; реализуем многопоточный узел:
   (if (> m 2) (pmap blur (list (str requestid "_1") (str requestid "_2") (str requestid "_3"))))
-  
+
   )
 
 
@@ -165,6 +170,6 @@
 
 
 (deftest check_id_request_type
-  (is (= "java.lang.Long" (type requestid))))
+  (is (= java.lang.Long (type requestid))))
 
 (run-tests 'nocomm)
