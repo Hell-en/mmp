@@ -8,14 +8,14 @@
 (defn second_id [n])
 (defn conveyor [filtr_lst])
 (defn apply_func [filtr])
+(defn blur [])
 (defn noise_reduction_1 [n])
 (defn noise_reduction_2 [n])
 (defn noise_reduction_3 [n])
-(defn blur [n])
 (defn panorama_stitching [n])
 (defn HDR_conversion [n])
 (defn choosing_best [n])
-(defn cutting_areas [n])
+(defn cutting_areas [])
 (defn cutting[f_name])
 
 
@@ -26,10 +26,9 @@
 (def res3 (atom nil))
 
 
-(defn read_input []
+(defn read_input "Чтение водных данных. Входные данные должны быть предствленны в виде 'id запроса' 'id фотографий' 'список фильтров'." []
   (def x (read))
   (def requestid x)
-  ;(println "reqID = " requestid)
   (if (empty? (str/replace x #"[0-9]" ""))
     (first_id x)
     (println "Wrong request ID"))
@@ -42,20 +41,19 @@
   (conveyor z)
   )
 
-(defn first_id [n] ; id запроса
+(defn first_id "Проверка, что 'id запроса' содержит только числа, прошла успешно. [n] - 'id запроса'." [n]
   (println "Request ID contains only numbers")
   (println "type is " (type n))
   )
-(defn second_id [n] ; id фотографий
+(defn second_id  "Проверка, что 'id фотографий' содержит только числа, прошла успешно. [n] - 'id фотографий'." [n]
   (println "Photos ID contains only numbers")
-  ;(println "type is " (type n))
   (println "number is " n)
   (def photos_ID_amount (+ 1 (count (re-seq #" " n))))
   (println "amount of photos_ID " photos_ID_amount)
   )
 
 
-(defn conveyor [filtr_lst]        ; Разбивает строку запроса на отдельные фильтры
+(defn conveyor "Разбивает строку запроса на отдельные фильтры. [filtr_lst] - строка фильтров." [filtr_lst]
   ; filtr_lst is java.lang.String!
   (def filtr_array (str/split filtr_lst #" "))
   (println filtr_array)
@@ -64,10 +62,7 @@
   (def cutting_areas_amount (filterv (fn [x] (= x "cutting_areas")) filtr_array))
   ; Все остальные фильтры : choosing_best, noise_reduction_1, noise_reduction_2, noise_reduction_3, blur
   (def rest_amount (filterv (fn [x] (or (= x "choosing_best") (= x "noise_reduction_1") (= x "noise_reduction_2") (= x "noise_reduction_3") (= x "blur"))) filtr_array))
-  ;(println panorama_amount HDR_amount cutting_areas_amount rest_amount)
-  ;(println (count filtr_lst) (count panorama_amount) (count HDR_amount) (count cutting_areas_amount) (count rest_amount))
   (def all_filtrs (+ (count panorama_amount) (count HDR_amount) (count cutting_areas_amount) (count rest_amount)))
-  ;(println all_filtrs)
   (cond
     (and (empty? panorama_amount) (empty? HDR_amount)) (println "There is no panorama_stitching or HDR_conversion")
     (> (+ (count panorama_amount) (count HDR_amount)) 1) (println "Too many filters from n to 1")
@@ -85,14 +80,13 @@
   (println (type filtr_array))
   (println (type filtr_lst))
   (println "photo_id = ", photoid)
-  ;(println (type photoid))
-  ;(println (type (Integer/parseInt photoid)))
 
   (apply_func (for [x filtr_array]
                 x))
   )
 
-(defn apply_func [filtr]
+(defn apply_func "Применяет текущий фильтр в конвеере. Если название фильтра введено некорректно,
+                  выводит сообщение об ошибке. [filtr] - текущий фильтров." [filtr]
   (println "current filtr = ", filtr)
   ; filtr`s type is LazeSeq
   ; Чтобы удобно работать дальше приведем его к типу строка
@@ -104,37 +98,38 @@
     (= str_filtr "noise_reduction_2") (noise_reduction_2 photoid)
     (= str_filtr "noise_reduction_3") (noise_reduction_3 photoid)
     (= str_filtr "choosing_best") (choosing_best photoid)
-    (= str_filtr "blur") (blur photoid)
-    (= str_filtr "cutting_areas") (cutting_areas photoid)
+    (= str_filtr "blur") (blur)
+    (= str_filtr "cutting_areas") (cutting_areas)
     :else (println "Error filter name"))
   (println "APPLY CYCLE IS DONE. NEXT!")
   )
 
+(defn blur "Применяет фильтр blur, производит запись в файл." []
+  (def f_name (str requestid ".txt"))
+  (with-open [wrtr (io/writer f_name :append true)]
+    (.write wrtr "processed blur "))
+  )
 
-(defn noise_reduction_1 [ph_id]                ; default
+(defn noise_reduction_1 "Применяет фильтр устарнение_шумов_1, производит запись в файл. [ph_id] - id фотографии для работы." [ph_id]
   (def f_name (str requestid ".txt"))
   (with-open [wrtr (io/writer f_name :append true)]
     (.write wrtr (str "processed noise_reduction_1 " ph_id " ")))
   (Integer/parseInt ph_id)
   )
-(defn noise_reduction_2 [ph_id]
+(defn noise_reduction_2 "Применяет фильтр устарнение_шумов_2, производит запись в файл. [ph_id] - id фотографии для работы." [ph_id]
   (def f_name (str requestid ".txt"))
   (with-open [wrtr (io/writer f_name :append true)]
     (.write wrtr (str "processed noise_reduction_2 " (inc (Integer/parseInt ph_id)) " ")))
   (inc (Integer/parseInt ph_id))
   )
-(defn noise_reduction_3 [ph_id]
+(defn noise_reduction_3 "Применяет фильтр устарнение_шумов_3, производит запись в файл. [ph_id] - id фотографии для работы." [ph_id]
   (def f_name (str requestid ".txt"))
   (with-open [wrtr (io/writer f_name :append true)]
     (.write wrtr (str "processed noise_reduction_3 " (dec (Integer/parseInt ph_id)) " ")))
   (dec (Integer/parseInt ph_id))
   )
-(defn blur [ph_id]
-  (def f_name (str requestid ".txt"))
-  (with-open [wrtr (io/writer f_name :append true)]
-    (.write wrtr "processed blur "))
-  )
-(defn panorama_stitching [photoid_lst]
+
+(defn panorama_stitching "Применяет фильтр сшивка_панорамы, производит запись в файл. [photoid_lst] - id фотографий для работы." [photoid_lst]
   (def photo_id_array (str/split photoid_lst #" "))
   (def f_name (str requestid ".txt"))
   (def id_process (for [x photo_id_array] (str "processed panorama_stitching " x " ")))
@@ -142,7 +137,7 @@
     (.write wrtr (apply str id_process))
     )
   )
-(defn HDR_conversion [photoid_lst]
+(defn HDR_conversion "Применяет фильтр HDR_преобразование, производит запись в файл. [photoid_lst] - id фотографий для работы." [photoid_lst]
   (def photo_id_array (str/split photoid_lst #" "))
   (def f_name (str requestid ".txt"))
   (def id_process (for [x photo_id_array] (str "processed HDR_conversion " x " ")))
@@ -150,7 +145,7 @@
     (.write wrtr (apply str id_process))
     )
   )
-(defn choosing_best [photoid]
+(defn choosing_best "Применяет фильтр выбор_лучшего, производит запись в файл. [photoid] - id фотографии для работы." [photoid]
   (print "choosing_beeeeeest")
   (def res1 (noise_reduction_1 photoid))
   (def res2 (noise_reduction_2 photoid))
@@ -160,7 +155,7 @@
   (print res3)
 
   )
-(defn cutting_areas [photoid]
+(defn cutting_areas "Применяет фильтр нарезка_на_области, производит запись в файл." []
   (cutting (str requestid ".txt"))
   (cutting (str requestid "_1.txt"))
   (cutting (str requestid "_2.txt"))
