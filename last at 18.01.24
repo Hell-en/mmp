@@ -115,7 +115,7 @@
   (def f_name (str requestid ".txt"))
   (with-open [wrtr (io/writer f_name :append true)]
     (.write wrtr (str "processed noise_reduction_1 " ph_id " ")))
-  ph_id
+  (Integer/parseInt ph_id)
   )
 (defn noise_reduction_2 [ph_id]
   (def f_name (str requestid ".txt"))
