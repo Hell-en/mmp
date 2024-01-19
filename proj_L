@@ -16,6 +16,7 @@
 (defn HDR_conversion [n])
 (defn choosing_best [n])
 (defn cutting_areas [n])
+(defn cutting[f_name])
 
 
 (def photoid (atom nil))
@@ -23,9 +24,13 @@
 (def res1 (atom nil))
 (def res2 (atom nil))
 (def res3 (atom nil))
+(def conveyor_check (atom nil))
 
 
-(defn read_input []
+(defn read_input
+  "something"
+  []
+  (def conveyor_check -1)                  ; default - not in cenveyor
   (def x (read))
   (def requestid x)
   ;(println "reqID = " requestid)
@@ -55,11 +60,14 @@
 
 
 (defn conveyor [filtr_lst]        ; Разбивает строку запроса на отдельные фильтры
-  (def panorama_amount (filterv (fn [x] (= x "panorama_stitching")) filtr_lst))
-  (def HDR_amount (filterv (fn [x] (= x "HDR_conversion")) filtr_lst))
-  (def cutting_areas_amount (filterv (fn [x] (= x "cutting_areas")) filtr_lst))
+  ; filtr_lst is java.lang.String!
+  (def filtr_array (str/split filtr_lst #" "))
+  (println filtr_array)
+  (def panorama_amount (filterv (fn [x] (= x "panorama_stitching")) filtr_array))
+  (def HDR_amount (filterv (fn [x] (= x "HDR_conversion")) filtr_array))
+  (def cutting_areas_amount (filterv (fn [x] (= x "cutting_areas")) filtr_array))
   ; Все остальные фильтры : choosing_best, noise_reduction_1, noise_reduction_2, noise_reduction_3, blur
-  (def rest_amount (filterv (fn [x] (or (= x "choosing_best") (= x "noise_reduction_1") (= x "noise_reduction_2") (= x "noise_reduction_3") (= x "blur"))) filtr_lst))
+  (def rest_amount (filterv (fn [x] (or (= x "choosing_best") (= x "noise_reduction_1") (= x "noise_reduction_2") (= x "noise_reduction_3") (= x "blur"))) filtr_array))
   ;(println panorama_amount HDR_amount cutting_areas_amount rest_amount)
   ;(println (count filtr_lst) (count panorama_amount) (count HDR_amount) (count cutting_areas_amount) (count rest_amount))
   (def all_filtrs (+ (count panorama_amount) (count HDR_amount) (count cutting_areas_amount) (count rest_amount)))
@@ -68,30 +76,40 @@
     (and (empty? panorama_amount) (empty? HDR_amount)) (println "There is no panorama_stitching or HDR_conversion")
     (> (+ (count panorama_amount) (count HDR_amount)) 1) (println "Too many filters from n to 1")
     (< photos_ID_amount 2) (println "Wrong amount of photos_ID")
-    (or (= (first filtr_lst) "panorama_stitching") (= (first filtr_lst) "HDR_conversion")) (println "Filter from n to 1 passed all tests")
+    (or (= (first filtr_array) "panorama_stitching") (= (first filtr_array) "HDR_conversion")) (println "Filter from n to 1 passed all tests")
     :else (println "First filter is incorrect")
     )
   (cond
     (empty? cutting_areas_amount) (println "There is no cutting_area")
     (> (count cutting_areas_amount) 1) (println "Too many cutting_areas filters")
-    (= (nth filtr_lst (- (count filtr_lst) 1)) "cutting_areas") (println "Cutting_areas passed all tests")
+    (= (nth filtr_array (- (count filtr_array) 1)) "cutting_areas") (println "Cutting_areas passed all tests")
     :else (println "Last filter is incorrect")
     )
-  (println "list of filtrs = ", filtr_lst)
+  (println "list of filtrs = ", filtr_array)
+  (println (type filtr_array))
   (println (type filtr_lst))
   (println "photo_id = ", photoid)
-  ;(println (type photoid))
-  ;(println (type (Integer/parseInt photoid)))
+  (def conveyor_check 1)
+  (apply_func (for [x filtr_array]
+                x))
+  )
 
-
-  (if (clojure.string/includes? filtr_lst "blur") (blur photoid))
-  (if (clojure.string/includes? filtr_lst "panorama_stitching") (panorama_stitching photoid))
-  (if (clojure.string/includes? filtr_lst "HDR_conversion") (HDR_conversion photoid))
-  (if (clojure.string/includes? filtr_lst "noise_reduction_1") (noise_reduction_1 photoid))
-  (if (clojure.string/includes? filtr_lst "noise_reduction_2") (noise_reduction_2 photoid))
-  (if (clojure.string/includes? filtr_lst "noise_reduction_3") (noise_reduction_3 photoid))
-  (if (clojure.string/includes? filtr_lst "choosing_best") (choosing_best photoid))
-  (if (clojure.string/includes? filtr_lst "cutting_areas") (cutting_areas photoid))
+(defn apply_func [filtr]
+  (println "current filtr = ", filtr)
+  ; filtr`s type is LazeSeq
+  ; Чтобы удобно работать дальше приведем его к типу строка
+  (def str_filtr (first filtr))
+  (cond
+    (= str_filtr "panorama_stitching") (panorama_stitching photoid)
+    (= str_filtr "HDR_conversion") (HDR_conversion photoid)
+    (= str_filtr "noise_reduction_1") (noise_reduction_1 photoid)
+    (= str_filtr "noise_reduction_2") (noise_reduction_2 photoid)
+    (= str_filtr "noise_reduction_3") (noise_reduction_3 photoid)
+    (= str_filtr "choosing_best") (choosing_best photoid)
+    (= str_filtr "blur") (blur photoid)
+    (= str_filtr "cutting_areas") (cutting_areas photoid)
+    :else (println "Error filter name"))
+  (println "APPLY CYCLE IS DONE. NEXT!")
   )
 
 
@@ -99,7 +117,7 @@
   (def f_name (str requestid ".txt"))
   (with-open [wrtr (io/writer f_name :append true)]
     (.write wrtr (str "processed noise_reduction_1 " ph_id " ")))
-  ph_id
+  (Integer/parseInt ph_id)
   )
 (defn noise_reduction_2 [ph_id]
   (def f_name (str requestid ".txt"))
@@ -119,57 +137,66 @@
     (.write wrtr "processed blur "))
   )
 (defn panorama_stitching [photoid_lst]
-  (with-open [wrtr (io/writer (str requestid ".txt") :append true)]
-    ; (.write wrtr "processed panorama_stitching ")
-    (for [x photoid_lst]
-      (.write wrtr (str "processed panorama_stitching " x)))
+  (def photo_id_array (str/split photoid_lst #" "))
+  (def f_name (str requestid ".txt"))
+  (def id_process (for [x photo_id_array] (str "processed panorama_stitching " x " ")))
+  (with-open [wrtr (io/writer f_name :append true)]
+    (.write wrtr (apply str id_process))
     )
   )
 (defn HDR_conversion [photoid_lst]
-  (with-open [wrtr (io/writer (str requestid ".txt") :append true)]
-    (.write wrtr "processed HDR_conversion ")
-    (.write wrtr (for [x photoid_lst] x)))
-  )
-(defn choosing_best [photoid]
-  (->> photoid
-       (noise_reduction_1)
-       (noise_reduction_2)
-       (noise_reduction_3)
-       )
-  (def res1 (noise_reduction_1 photoid))
-  (println res1)
-  (println (type res1))
-  (def res2 (noise_reduction_2 photoid))
-  (def res3 (noise_reduction_3 photoid))
+  (def photo_id_array (str/split photoid_lst #" "))
   (def f_name (str requestid ".txt"))
-  (with-open [wrtr (io/writer f_name :append true)]
-    (cond (and (> res1 res3) (> res1 res2))
-          (.write wrtr (str "processed noise_reduction_1 was best "))
-          (and (> res2 res3) (> res2 res1))
-          (.write wrtr (str "processed noise_reduction_2 was best "))
-          (and (> res3 res1) (> res3 res2))
-          (.write wrtr (str "processed noise_reduction_3 was best "))
-          )
+  (def id_process (for [x photo_id_array] (str "processed HDR_conversion " x " ")))
+  (with-open [wrtr (io/writer (str requestid ".txt") :append true)]
+    (.write wrtr (apply str id_process))
     )
   )
-(defn cutting_areas [photoid]
-  (println "print the number of partition > 1")
-  (def m (read))
-  (for [x (range m)]
-    ((println "cutting f_name = " (str requestid "_" x ".txt"))
-     (with-open [wrtr (io/writer (str requestid "_" x ".txt") :append true)]
-       (.write wrtr "processed cutting ") (.write wrtr x))
-     ))
-  ; реализуем многопоточный узел:
-  (if (> m 2) (pmap blur (list (str requestid "_1") (str requestid "_2") (str requestid "_3"))))
+(defn choosing_best [photoid]
+  (print "choosing_beeeeeest")
+  (def res1 (noise_reduction_1 photoid))
+  (def res2 (noise_reduction_2 photoid))
+  (def res3 (noise_reduction_3 photoid))
+  (print res1)
+  (print res2)
+  (print res3)
 
   )
+(defn cutting_areas [photoid]
+  "@photoid smth more"
+  (cutting (str requestid ".txt"))
+  (cutting (str requestid "_1.txt"))
+  (cutting (str requestid "_2.txt"))
+  (cutting (str requestid "_3.txt"))
+  )
 
+(defn cutting[f_name]
+  (with-open [wrtr (io/writer f_name :append true)]
+    (.write wrtr "processed cutting "))
+  )
+
+(defn read_file_check
+  []
+  (with-open [r (clojure.java.io/input-stream (str requestid ".txt"))]
+    (def c (.read r)))
+  (if (= -1 c) -1 1)
+  c)
 
 (read_input)
 
 
 (deftest check_id_request_type
   (is (= java.lang.Long (type requestid))))
+(deftest check_id_request_value
+  (is (< 0 (Integer/parseInt requestid))))
+(deftest check_id_photo_type
+  (is (= java.lang.Long (type photoid))))
+(deftest check_id_photo_value
+  (is (< 0 (Integer/parseInt photoid))))
+; тест ниже: если зашли в конвейер то 1 = 1 присвоенному параметру
+; если не зашли то пустой файл -1 = -1 аналогично
+(deftest no_conveyor_check
+  (is (= (read_file_check) (Integer/parseInt conveyor_check))))
+
 
 (run-tests 'nocomm)
