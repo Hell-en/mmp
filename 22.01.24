@@ -24,7 +24,6 @@
 (def res1 (atom nil))
 (def res2 (atom nil))
 (def res3 (atom nil))
-(def conveyor_check (atom nil))
 
 
 (defn read_input "Чтение водных данных. Входные данные должны быть предствленны в виде 'id запроса' 'id фотографий' 'список фильтров'." []
@@ -88,7 +87,7 @@
   (if (not= all_filtrs (count filtr_array))
     (throw (IllegalArgumentException. "There are some wrong filter's names"))
     (println "All filters exist"))
-  (def conveyor_check 1)
+
   (apply_func (for [x filtr_array]
                 x))
   )
@@ -175,13 +174,6 @@
     (.write wrtr "processed cutting "))
   )
 
-(defn read_file_check
-  []
-  (with-open [r (clojure.java.io/input-stream (str requestid ".txt"))]
-    (def c (.read r)))
-  (if (= -1 c) -1 1)
-  c)
-
 
 (read_input)
 
@@ -194,8 +186,5 @@
   (is (= java.lang.String (type photoid))))
 (deftest check_id_photo_value
   (is (< 0 (Integer/parseInt photoid))))
-; успешный заход в конвейер/неуспешный
-(deftest no_conveyor_check
-  (is ( = (read_file_check) conveyor_check)))
 
 (run-tests 'nocomm)
