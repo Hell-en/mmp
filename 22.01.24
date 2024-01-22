@@ -9,22 +9,18 @@
 (defn conveyor [filtr_lst])
 (defn apply_func [filtr])
 (defn blur [])
-(defn noise_reduction_1 [n])
-(defn noise_reduction_2 [n])
-(defn noise_reduction_3 [n])
+(defn noise_reduction_1 [])
+(defn noise_reduction_2 [])
+(defn noise_reduction_3 [])
 (defn panorama_stitching [n])
 (defn HDR_conversion [n])
-(defn choosing_best [n])
+(defn choosing_best [])
 (defn cutting_areas [])
 (defn cutting[f_name])
 
 
 (def photoid (atom nil))
 (def requestid (atom nil))
-(def res1 (atom nil))
-(def res2 (atom nil))
-(def res3 (atom nil))
-(def conveyor_check (atom nil))
 
 
 (defn read_input "Чтение водных данных. Входные данные должны быть предствленны в виде 'id запроса' 'id фотографий' 'список фильтров'." []
@@ -88,7 +84,7 @@
   (if (not= all_filtrs (count filtr_array))
     (throw (IllegalArgumentException. "There are some wrong filter's names"))
     (println "All filters exist"))
-  (def conveyor_check 1)
+
   (apply_func (for [x filtr_array]
                 x))
   )
@@ -102,10 +98,10 @@
   (cond
     (= str_filtr "panorama_stitching") (panorama_stitching photoid)
     (= str_filtr "HDR_conversion") (HDR_conversion photoid)
-    (= str_filtr "noise_reduction_1") (noise_reduction_1 photoid)
-    (= str_filtr "noise_reduction_2") (noise_reduction_2 photoid)
-    (= str_filtr "noise_reduction_3") (noise_reduction_3 photoid)
-    (= str_filtr "choosing_best") (choosing_best photoid)
+    (= str_filtr "noise_reduction_1") (noise_reduction_1)
+    (= str_filtr "noise_reduction_2") (noise_reduction_2)
+    (= str_filtr "noise_reduction_3") (noise_reduction_3)
+    (= str_filtr "choosing_best") (choosing_best)
     (= str_filtr "blur") (blur)
     (= str_filtr "cutting_areas") (cutting_areas)
     )
@@ -118,23 +114,23 @@
     (.write wrtr "processed blur "))
   )
 
-(defn noise_reduction_1 "Применяет фильтр устарнение_шумов_1, производит запись в файл. [ph_id] - id фотографии для работы." [ph_id]
+(defn noise_reduction_1 "Применяет фильтр устарнение_шумов_1, производит запись в файл." []
   (def f_name (str requestid ".txt"))
   (with-open [wrtr (io/writer f_name :append true)]
-    (.write wrtr (str "processed noise_reduction_1 " ph_id " ")))
-  (Integer/parseInt ph_id)
+    (.write wrtr (str "processed noise_reduction_1 " photoid " ")))
+  (Integer/parseInt photoid)
   )
-(defn noise_reduction_2 "Применяет фильтр устарнение_шумов_2, производит запись в файл. [ph_id] - id фотографии для работы." [ph_id]
+(defn noise_reduction_2 "Применяет фильтр устарнение_шумов_2, производит запись в файл." []
   (def f_name (str requestid ".txt"))
   (with-open [wrtr (io/writer f_name :append true)]
-    (.write wrtr (str "processed noise_reduction_2 " (inc (Integer/parseInt ph_id)) " ")))
-  (inc (Integer/parseInt ph_id))
+    (.write wrtr (str "processed noise_reduction_2 " (inc (Integer/parseInt photoid)) " ")))
+  (inc (Integer/parseInt photoid))
   )
-(defn noise_reduction_3 "Применяет фильтр устарнение_шумов_3, производит запись в файл. [ph_id] - id фотографии для работы." [ph_id]
+(defn noise_reduction_3 "Применяет фильтр устарнение_шумов_3, производит запись в файл." []
   (def f_name (str requestid ".txt"))
   (with-open [wrtr (io/writer f_name :append true)]
-    (.write wrtr (str "processed noise_reduction_3 " (dec (Integer/parseInt ph_id)) " ")))
-  (dec (Integer/parseInt ph_id))
+    (.write wrtr (str "processed noise_reduction_3 " (dec (Integer/parseInt photoid)) " ")))
+  (dec (Integer/parseInt photoid))
   )
 
 (defn panorama_stitching "Применяет фильтр сшивка_панорамы, производит запись в файл. [photoid_lst] - id фотографий для работы." [photoid_lst]
@@ -153,16 +149,16 @@
     (.write wrtr (apply str id_process))
     )
   )
-(defn choosing_best "Применяет фильтр выбор_лучшего, производит запись в файл. [photoid] - id фотографии для работы." [photoid]
-  (print "choosing_beeeeeest")
-  (def res1 (noise_reduction_1 photoid))
-  (def res2 (noise_reduction_2 photoid))
-  (def res3 (noise_reduction_3 photoid))
-  (print res1)
-  (print res2)
-  (print res3)
-
+(defn choosing_best "Применяет фильтр выбор_лучшего, производит запись в файл." []
+  (println "choosing_beeeeeest")
+  (dosync (pcalls (noise_reduction_3) (noise_reduction_1) (noise_reduction_2)))
+  (def best_score (rand-int 3))
+  (println "best_score" best_score)
+  (def f_name (str requestid ".txt"))
+  (with-open [wrtr (io/writer f_name :append true)]
+    (.write wrtr (str "processed choosing_best, best noise_reduction filter is " best_score " ")))
   )
+
 (defn cutting_areas "Применяет фильтр нарезка_на_области, производит запись в файл." []
   (cutting (str requestid ".txt"))
   (cutting (str requestid "_1.txt"))
@@ -174,13 +170,6 @@
   (with-open [wrtr (io/writer f_name :append true)]
     (.write wrtr "processed cutting "))
   )
-
-(defn read_file_check
-  []
-  (with-open [r (clojure.java.io/input-stream (str requestid ".txt"))]
-    (def c (.read r)))
-  (if (= -1 c) -1 1)
-  c)
 
 
 (read_input)
