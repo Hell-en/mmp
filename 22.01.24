@@ -154,12 +154,17 @@
   )
 (defn choosing_best "Применяет фильтр выбор_лучшего, производит запись в файл. [photoid] - id фотографии для работы." [photoid]
   (print "choosing_beeeeeest")
-  (def res1 (noise_reduction_1 photoid))
-  (def res2 (noise_reduction_2 photoid))
-  (def res3 (noise_reduction_3 photoid))
-  (print res1)
-  (print res2)
-  (print res3)
+  (->> photoid
+       (noise_reduction_1)
+       (noise_reduction_2)
+       (noise_reduction_3)
+       )
+  (println "done with threads")
+  (def best_score (rand-int 3))
+  (println "best_score" best_score)
+  (def f_name (str requestid ".txt"))
+  (with-open [wrtr (io/writer f_name :append true)]
+    (.write wrtr (str "processed chhsoing_best, score is " best_score " ")))
 
   )
 (defn cutting_areas "Применяет фильтр нарезка_на_области, производит запись в файл." []
