@@ -24,6 +24,7 @@
 (def res1 (atom nil))
 (def res2 (atom nil))
 (def res3 (atom nil))
+(def conveyor_check (atom nil))
 
 
 (defn read_input "Чтение водных данных. Входные данные должны быть предствленны в виде 'id запроса' 'id фотографий' 'список фильтров'." []
@@ -87,7 +88,7 @@
   (if (not= all_filtrs (count filtr_array))
     (throw (IllegalArgumentException. "There are some wrong filter's names"))
     (println "All filters exist"))
-
+  (def conveyor_check 1)
   (apply_func (for [x filtr_array]
                 x))
   )
@@ -154,17 +155,12 @@
   )
 (defn choosing_best "Применяет фильтр выбор_лучшего, производит запись в файл. [photoid] - id фотографии для работы." [photoid]
   (print "choosing_beeeeeest")
-  (->> photoid
-       (noise_reduction_1)
-       (noise_reduction_2)
-       (noise_reduction_3)
-       )
-  (println "done with threads")
-  (def best_score (rand-int 3))
-  (println "best_score" best_score)
-  (def f_name (str requestid ".txt"))
-  (with-open [wrtr (io/writer f_name :append true)]
-    (.write wrtr (str "processed chhsoing_best, score is " best_score " ")))
+  (def res1 (noise_reduction_1 photoid))
+  (def res2 (noise_reduction_2 photoid))
+  (def res3 (noise_reduction_3 photoid))
+  (print res1)
+  (print res2)
+  (print res3)
 
   )
 (defn cutting_areas "Применяет фильтр нарезка_на_области, производит запись в файл." []
@@ -179,6 +175,13 @@
     (.write wrtr "processed cutting "))
   )
 
+(defn read_file_check
+  []
+  (with-open [r (clojure.java.io/input-stream (str requestid ".txt"))]
+    (def c (.read r)))
+  (if (= -1 c) -1 1)
+  c)
+
 
 (read_input)
 
@@ -191,5 +194,21 @@
   (is (= java.lang.String (type photoid))))
 (deftest check_id_photo_value
   (is (< 0 (Integer/parseInt photoid))))
+(deftest check_panorama_amount
+  (is (thrown? Exception (conveyor "panorama_stitching panorama_stitching"))))
+(deftest check_HDR_amount
+  (is (thrown? Exception (conveyor "HDR_conversion HDR_conversion"))))
+(deftest check_from_n_to_1_amount
+  (is (thrown? Exception (conveyor "panorama_stitching HDR_conversion"))))
+(deftest check_first_filter_panorama
+  (is (thrown? Exception (conveyor "blur panorama_stitching"))))
+(deftest check_first_filter_HDR
+  (is (thrown? Exception (conveyor "blur HDR_conversion"))))
+(deftest check_cutting_amount
+  (is (thrown? Exception (conveyor "cutting_areas cutting_areas"))))
+(deftest check_last_filter_cutting
+  (is (thrown? Exception (conveyor "cutting_areas blur"))))
+(deftest check_wrong_filters_name
+  (is (thrown? Exception (conveyor "cutting_areas blur badfb"))))
 
 (run-tests 'nocomm)
