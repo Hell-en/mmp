@@ -1,4 +1,5 @@
-# mmp - Modern methods of programming, 2023, NSU
+# mmp
+## Modern methods of programming, 2023 NSU
 
 Тема проекта:
 Конвейерная обработка
